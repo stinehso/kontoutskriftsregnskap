@@ -8,7 +8,6 @@ import sys
 import locale as loc
 
 
-
 '''
 Hensikten med dette skriptet er å kunne skrive ut pene filer og lage plott og
 et oversiktlig regnskap basert på gitte kontoutskrifter.
@@ -72,7 +71,7 @@ def categories_from_file(df_old, category_file):
 
     #df = df.set_index('Dato')
 
-    return df
+    return df, names
 
 
 
@@ -289,11 +288,8 @@ def input_args():
 def main():
     accounts_file, category_file = input_args()
     acc = read_accounts_file(accounts_file)
-    #df = add_categories(acc)
-    df = categories_from_file(acc, category_file)
+    df, categories = categories_from_file(acc, category_file)
     #df = df.reset_index()
-    # print(df.head())
-    # print()
     menu(df)
 
 
