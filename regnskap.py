@@ -75,6 +75,31 @@ def categories_from_file(df_old, category_file):
 
 
 
+def filter_data(df, categories, from_date='2018-10-01', to_date='2019-12-31',
+                min=0, max=100000):
+    '''Print the account info based on input options. Default is to print all'''
+    ## filter categories - only one or all for now
+    if categories != 'all':
+        df1 = df.loc[df.loc[:, 'Konto'] == categories]
+    else:
+        df1 = df
+
+    ## filter dates
+    # create series of all dates
+    dates = pd.to_datetime(df.loc[:, 'Dato'], dayfirst=True)#, format='%d.%m.%y')
+    # series filter by date
+    date_mask = (dates >= from_date) & (dates <= to_date)
+    df2 = df1.loc[date_mask]
+
+    ## filter amount
+    # 'Ut' has negative values, makes filter counterintuitive
+    amount_mask = ((df2.loc[:, 'Ut']< -min) & (df2.loc[:, 'Ut']> -max)) |\
+        ((df2.loc[:, 'Inn']>min) & (df2.loc[:, 'Inn']<max))
+    df3 = df2.loc[amount_mask]
+
+    return df3
+
+
 def print_category(df):
     '''Print entries in selected category'''
 
@@ -135,14 +160,19 @@ def print_belop(df):
 def print_sum(df):
     '''Print sum of each category for each month'''
 
+    # series of dates
     dato = pd.to_datetime(df.loc[:, 'Dato'], dayfirst=True)#, format='%d.%m.%y')
+    print('***')
+    # series containing boolean values - true where konto != 8
     sparemaske = (df['Konto'] != 8)
+    # df filtered
     bruk = df.loc[sparemaske]
     bruk = df
     mask = []
     d = 31
     mnd = ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des']
 
+    # append tuples with first and last day of month to list mask
     for i in range(12):
         if i in [0, 2, 4, 6, 7, 9, 11]:
             d = 31
@@ -158,6 +188,7 @@ def print_sum(df):
     inn = []
     ut = []
     for i in range(12):
+        # series filter by date
         themask = (dato > mask[i][0]) & (dato < mask[i][1])
         df1 = bruk.loc[themask]
         ut.append(np.nansum(df1['Ut']))
@@ -191,14 +222,14 @@ def print_sum(df):
 
 def plot_menu(df):
     menu = {}
-    menu['1'] = 'Plot hele utskriften'
-    menu['2'] = 'Velg kategori'
-    menu['3'] = 'Velg dato'
-    menu['4'] = 'Velg avgrenset beløp'
+    menu['1'] = 'Plot all'
+    menu['2'] = 'Choose categories'
+    menu['3'] = 'Choose dates'
+    menu['4'] = 'Choose amount limits'
     menu['q'] = 'Quit'
 
     while True:
-        print('---- PRINT MENU ----')
+        print('---- PLOT MENU ----')
         [print(key, value) for (key, value) in sorted(menu.items())]
 
         selection=input("Please Select: ")
@@ -217,12 +248,12 @@ def plot_menu(df):
           print ("Unknown Option Selected!")
 
 
-def print_menu(df):
+def options_menu(df, output_func):
     menu = {}
-    menu['1'] = 'Print hele utskriften'
-    menu['2'] = 'Velg kategori'
-    menu['3'] = 'Velg dato'
-    menu['4'] = 'Velg avgrenset beløp'
+    menu['1'] = 'Print all'
+    menu['2'] = 'Choose categories'
+    menu['3'] = 'Choose dates'
+    menu['4'] = 'Choose amount limits'
     menu['q'] = 'Quit'
 
     while True:
@@ -289,8 +320,9 @@ def main():
     accounts_file, category_file = input_args()
     acc = read_accounts_file(accounts_file)
     df, categories = categories_from_file(acc, category_file)
-    #df = df.reset_index()
-    menu(df)
+    print_data(df, 'all', max=300)
+    # print_sum(df)
+    # menu(df)
 
 
 
