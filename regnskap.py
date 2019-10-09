@@ -16,7 +16,8 @@ et oversiktlig regnskap basert på gitte kontoutskrifter.
 def read_accounts_file(accounts_file):
     '''Read the yearly accounts from a csv file'''
     print('reading file..')
-    df = pd.read_csv(accounts_file, sep=';', decimal=',', index_col=False)
+    df = pd.read_csv(accounts_file, sep=';', thousands=' ', decimal=',',
+         index_col=False)
     return df
 
 
@@ -157,66 +158,57 @@ def print_belop(df):
 
 
 
-def print_sum(df):
+def print_sum(df, period='month'):
     '''Print sum of each category for each month'''
+    year = 2019
 
-    # series of dates
-    dato = pd.to_datetime(df.loc[:, 'Dato'], dayfirst=True)#, format='%d.%m.%y')
-    print('***')
-    # series containing boolean values - true where konto != 8
-    sparemaske = (df['Konto'] != 8)
-    # df filtered
-    bruk = df.loc[sparemaske]
-    bruk = df
     mask = []
     d = 31
     mnd = ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des']
 
     # append tuples with first and last day of month to list mask
     for i in range(12):
-        if i in [0, 2, 4, 6, 7, 9, 11]:
-            d = 31
-        elif i in [3, 5, 8, 10]:
+        #if i in [0, 2, 4, 6, 7, 9, 11]:
+            #d = 31
+        if i in [3, 5, 8, 10]:
             d = 30
         else:
             d = 28
         if i < 9:
-            mask.append((f'2018-0{i+1}-01', f'2018-0{i+1}-{d}'))
+            mask.append((f'{year}-0{i+1}-01', f'{year}-0{i+1}-{d}'))
         else:
-            mask.append((f'2018-{i+1}-01', f'2018-{i+1}-{d}'))
+            mask.append((f'{year}-{i+1}-01', f'{year}-{i+1}-{d}'))
 
-    inn = []
-    ut = []
+    in_ = []
+    out = []
     for i in range(12):
-        # series filter by date
-        themask = (dato > mask[i][0]) & (dato < mask[i][1])
-        df1 = bruk.loc[themask]
-        ut.append(np.nansum(df1['Ut']))
-        inn.append(np.nansum(df1['Inn']))
+        df1 = filter_data(df, 'all', from_date=mask[i][0], to_date=mask[i][1])
+        out.append(np.nansum(df1['Ut']))
+        in_.append(np.nansum(df1['Inn']))
+
         print('---', mnd[i], '---')
         print(np.nansum(df1['Ut']))
         print(np.nansum(df1['Inn']))
-        #print('***')
 
-    ut = [s*-1 for s in ut]
-    ut = ut[6:]
-    inn = inn[6:]
+    out = [sum_*-1 for sum_ in out]
+    out = out[6:]
+    in_ = in_[6:]
 
-    plt.plot(ut)
-    plt.plot(inn)
+    plt.plot(out)
+    plt.plot(in_)
     plt.grid()
-    plt.legend(['ut', 'inn'])
+    plt.legend(['out', 'in'])
     plt.show()
 
-    cum_ut = np.cumsum(ut)
-    cum_inn = np.cumsum(inn)
-    plt.plot(cum_ut)
-    plt.plot(cum_inn)
+    cum_out = np.cumsum(out)
+    cum_in = np.cumsum(in_)
+    plt.plot(cum_out)
+    plt.plot(cum_in)
     plt.grid()
-    plt.legend(['ut', 'inn'])
+    plt.legend(['out', 'in'])
     plt.show()
 
-    print('Overskudd i perioden: {:.2f} kr'.format(cum_inn[-1]-cum_ut[-1]))
+    print('Overskudd i perioden: {:.2f} kr'.format(cum_in[-1]-cum_out[-1]))
 
 
 
@@ -319,9 +311,11 @@ def input_args():
 def main():
     accounts_file, category_file = input_args()
     acc = read_accounts_file(accounts_file)
+    #print(acc)
     df, categories = categories_from_file(acc, category_file)
-    print_data(df, 'all', max=300)
-    # print_sum(df)
+    df = filter_data(df, 'all', min=1000, max=30000)
+    print(df)
+    print_sum(df)
     # menu(df)
 
 
