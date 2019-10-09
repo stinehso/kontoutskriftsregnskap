@@ -79,7 +79,21 @@ def filter_data(df, categories, from_date='2018-10-01', to_date='2019-12-31',
     '''Print the account info based on input options. Default is to print all'''
     ## filter categories - only one or all for now
     if categories != 'all':
-        df1 = df.loc[df.loc[:, 'Konto'] == categories]
+        # just one for now
+        df1 = df.loc[df.loc[:, 'Konto'] == categories[0]]
+
+
+        # mask = []
+        # i=0
+        # for cat in categories:
+        #     mask.append(df.loc[:, 'Konto'] == cat)
+        #     print(mask[i])
+        #     i+=1
+        # newdf = pd.concat([mask[0], mask[1]], axis=1)
+        # #newdf = pd.merge(pd.DataFrame(mask[0]), pd.DataFrame(mask[1]), )
+        # print(newdf)
+        # return
+        # df1 = df.loc[mask]
     else:
         df1 = df
 
@@ -235,6 +249,7 @@ def choose_categories(categories):
     chosen = []
     for i in range(len(categories)):
         menu[f'{i}'] = categories[i]
+    menu['s'] = 'Show selected'
     menu['q'] = 'Finish'
 
     while True:
@@ -242,8 +257,9 @@ def choose_categories(categories):
         [print(key, value) for (key, value) in sorted(menu.items())]
 
         selection = input("Please Select: ")
-        if selection == 'q':
+        if selection == 's':
             print(chosen)
+        elif selection == 'q':
             break
         elif selection in menu.keys():
             chosen.append(categories[int(selection)])
@@ -251,6 +267,7 @@ def choose_categories(categories):
           print ("Unknown Option Selected!")
 
     return chosen
+
 
 
 
@@ -274,9 +291,8 @@ def options_menu(df, output_func, categories):
         elif selection == '2':
             categories_chosen = choose_categories(categories)
             df = filter_data(df, categories_chosen)
-            print_category(df)
         elif selection == '3':
-            filter_data(df, categories, from_date='2018-10-01', to_date='2019-12-31',
+            df = filter_data(df, categories, from_date='2018-10-01', to_date='2019-12-31',
                 min=0, max=100000)
             #print_dato(df)
             continue
