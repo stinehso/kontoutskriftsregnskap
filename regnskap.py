@@ -43,8 +43,8 @@ def read_category_file(filename):
         for line in infile.readlines():
             names.append(line.split(';')[0])
             list = line.split(';')[1:]
-            tmp = ''
-            for item in list:
+            tmp = list[0].strip()
+            for item in list[1:]:
                 tmp = '|'.join((tmp, item.strip()))
             patterns.append(tmp)
 
@@ -55,6 +55,8 @@ def read_category_file(filename):
 def categories_from_file(df_old, category_file):
     '''Add categories from file to transactions based on description'''
     names, patterns = read_category_file(category_file)
+    print(names)
+    print(patterns)
 
     print('adding categories..')
 
@@ -66,7 +68,7 @@ def categories_from_file(df_old, category_file):
         if not isinstance(beskrivelse, str):
             continue
         for p in range(len(patterns)):
-            if re.search(patterns[p], beskrivelse):
+            if re.search(patterns[p].lower(), beskrivelse.lower()):
                 #df.loc[i, ('Konto')] = p+1         # assign number instead of name
                 df.loc[i, ('Konto')] = names[p]
 
@@ -83,6 +85,8 @@ def filter_data(df, categories, from_date='2018-10-01', to_date='2019-12-31',
     if categories != 'all':
         df1 = df.loc[df.loc[:, 'Konto'] == categories]
     else:
+        print('all!')
+        print(df)
         df1 = df
 
     ## filter dates
@@ -313,9 +317,9 @@ def main():
     acc = read_accounts_file(accounts_file)
     #print(acc)
     df, categories = categories_from_file(acc, category_file)
-    df = filter_data(df, 'all', min=1000, max=30000)
+    df = filter_data(df, 'Helse', min=0, max=30000)
     print(df)
-    print_sum(df)
+    #print_sum(df)
     # menu(df)
 
 
