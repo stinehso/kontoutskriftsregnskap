@@ -13,12 +13,14 @@ Hensikten med dette skriptet er å kunne skrive ut pene filer og lage plott og
 et oversiktlig regnskap basert på gitte kontoutskrifter.
 '''
 
+
 def read_accounts_file(accounts_file):
     '''Read the yearly accounts from a csv file'''
     print('reading file..')
     df = pd.read_csv(accounts_file, sep=';', thousands=' ', decimal=',',
          index_col=False)
     return df
+
 
 
 
@@ -34,11 +36,8 @@ def read_category_file(filename):
         filename = f'{name}.csv'
         open(filename, 'w+')
 
-    print('reading file..')
-
     names = []
     patterns = []
-
     with open(filename) as infile:
         for line in infile.readlines():
             names.append(line.split(';')[0])
@@ -52,13 +51,10 @@ def read_category_file(filename):
 
 
 
+
 def categories_from_file(df_old, category_file):
     '''Add categories from file to transactions based on description'''
     names, patterns = read_category_file(category_file)
-    print(names)
-    print(patterns)
-
-    print('adding categories..')
 
     df = df_old.assign(Konto='')
     length = df.get('Beskrivelse').size             # Sparebank1 specific
@@ -73,8 +69,8 @@ def categories_from_file(df_old, category_file):
                 df.loc[i, ('Konto')] = names[p]
 
     #df = df.set_index('Dato')
-
     return df, names
+
 
 
 
@@ -85,8 +81,6 @@ def filter_data(df, categories, from_date='2018-10-01', to_date='2019-12-31',
     if categories != 'all':
         df1 = df.loc[df.loc[:, 'Konto'] == categories]
     else:
-        print('all!')
-        print(df)
         df1 = df
 
     ## filter dates
@@ -105,31 +99,18 @@ def filter_data(df, categories, from_date='2018-10-01', to_date='2019-12-31',
     return df3
 
 
-def print_category(df):
-    '''Print entries in selected category'''
 
-    print('''Konti:
-    0 Ingen konto
-    1 Dagligvarer
-    2 Mat/drikke ute
-    3 Husleie, klesvask
-    4 Forsikringer
-    5 Abonnementer
-    6 Reise
-    7 Kultur
-    8 Klær/ ting
-    9 Sparing
-    10 Annet''')
+def print_data(df):
+    '''print all data in a dataframe'''
+    #df1 = df.loc[df.loc[:, 'Konto']==category]
+    print(df)
+    print()
+    in_ = np.nansum(df['Inn'])
+    out = -np.nansum(df['Ut'])
+    print('Total in:', in_)
+    print('Total out:', out)
+    print('Result:', in_ - out)
 
-    category = int(input())
-
-    df1 = df.loc[df.loc[:, 'Konto']==category]
-    print(df1)
-    print(-sum(df1['Ut']))
-    print(sum(df1['Inn']))
-
-    menu(df)
-    return
 
 
 
@@ -317,10 +298,11 @@ def main():
     acc = read_accounts_file(accounts_file)
     #print(acc)
     df, categories = categories_from_file(acc, category_file)
-    df = filter_data(df, 'Helse', min=0, max=30000)
-    print(df)
+    #df = filter_data(df, 'Helse', min=0, max=30000)
+    #print(df)
     #print_sum(df)
-    # menu(df)
+    print_data(df)
+    menu(df)
 
 
 
