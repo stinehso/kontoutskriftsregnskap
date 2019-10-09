@@ -100,6 +100,7 @@ def filter_data(df, categories, from_date='2018-10-01', to_date='2019-12-31',
 
 
 
+
 def print_data(df):
     '''print all data in a dataframe'''
     #df1 = df.loc[df.loc[:, 'Konto']==category]
@@ -113,33 +114,34 @@ def print_data(df):
 
 
 
+#
+# def print_belop(df):
+#     '''Print entries above or below selected amount'''
+#
+#     print('''- MENY:
+#     1 Betalt over beløp
+#     2 Betalt under beløp
+#     3 Fått inn over beløp
+#     4 Fått inn under beløp''')
+#
+#     valg = input()
+#     belop = int(input('Beløp:'))
+#
+#     if valg == '1':
+#         df2 = df.loc[df.loc[:, 'Ut']<-belop]
+#         print(df2)
+#     if valg == '2':
+#         df2 = df.loc[df.loc[:, 'Ut']>-belop]
+#         print(df2)
+#     if valg == '3':
+#         df2 = df.loc[df.loc[:, 'Inn']>belop]
+#         print(df2)
+#     if valg == '4':
+#         df2 = df.loc[df.loc[:, 'Inn']<belop]
+#         print(df2)
+#
+#     menu(df)
 
-def print_belop(df):
-    '''Print entries above or below selected amount'''
-
-    print('''- MENY:
-    1 Betalt over beløp
-    2 Betalt under beløp
-    3 Fått inn over beløp
-    4 Fått inn under beløp''')
-
-    valg = input()
-    belop = int(input('Beløp:'))
-
-    if valg == '1':
-        df2 = df.loc[df.loc[:, 'Ut']<-belop]
-        print(df2)
-    if valg == '2':
-        df2 = df.loc[df.loc[:, 'Ut']>-belop]
-        print(df2)
-    if valg == '3':
-        df2 = df.loc[df.loc[:, 'Inn']>belop]
-        print(df2)
-    if valg == '4':
-        df2 = df.loc[df.loc[:, 'Inn']<belop]
-        print(df2)
-
-    menu(df)
 
 
 
@@ -148,13 +150,12 @@ def print_sum(df, period='month'):
     year = 2019
 
     mask = []
-    d = 31
     mnd = ['jan', 'feb', 'mar', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'des']
 
     # append tuples with first and last day of month to list mask
     for i in range(12):
-        #if i in [0, 2, 4, 6, 7, 9, 11]:
-            #d = 31
+        if i in [0, 2, 4, 6, 7, 9, 11]:
+            d = 31
         if i in [3, 5, 8, 10]:
             d = 30
         else:
@@ -197,6 +198,7 @@ def print_sum(df, period='month'):
 
 
 
+
 def plot_menu(df):
     menu = {}
     menu['1'] = 'Plot all'
@@ -225,27 +227,62 @@ def plot_menu(df):
           print ("Unknown Option Selected!")
 
 
-def options_menu(df, output_func):
+
+
+def choose_categories(categories):
+    '''allows user to select a subset of the categories'''
     menu = {}
-    menu['1'] = 'Print all'
+    chosen = []
+    for i in range(len(categories)):
+        menu[f'{i}'] = categories[i]
+    menu['q'] = 'Finish'
+
+    while True:
+        print('---- CATEGORIES ----')
+        [print(key, value) for (key, value) in sorted(menu.items())]
+
+        selection = input("Please Select: ")
+        if selection == 'q':
+            print(chosen)
+            break
+        elif selection in menu.keys():
+            chosen.append(categories[int(selection)])
+        else:
+          print ("Unknown Option Selected!")
+
+    return chosen
+
+
+
+def options_menu(df, output_func, categories):
+    menu = {}
+    menu['1'] = 'Output data'
     menu['2'] = 'Choose categories'
     menu['3'] = 'Choose dates'
     menu['4'] = 'Choose amount limits'
+    menu['5'] = 'Show selection'
     menu['q'] = 'Quit'
 
     while True:
-        print('---- PRINT MENU ----')
+        print('---- OPTIONS ----')
         [print(key, value) for (key, value) in sorted(menu.items())]
 
         selection=input("Please Select: ")
         if selection =='1':
-            print(df)
+            output_func(df)
+            break
         elif selection == '2':
+            categories_chosen = choose_categories(categories)
+            df = filter_data(df, categories_chosen)
             print_category(df)
         elif selection == '3':
+            filter_data(df, categories, from_date='2018-10-01', to_date='2019-12-31',
+                min=0, max=100000)
             #print_dato(df)
             continue
         elif selection == '4':
+            filter_data(df, categories, from_date='2018-10-01', to_date='2019-12-31',
+                min=0, max=100000)
             print_belop(df)
         elif selection == 'q':
           break
@@ -253,11 +290,14 @@ def options_menu(df, output_func):
           print ("Unknown Option Selected!")
 
 
-def menu(df):
+
+
+def menu(df, categories):
     menu = {}
     menu['1'] = 'Print'
-    menu['2'] = 'Plot'
-    menu['3'] = 'Edit categories'
+    menu['2'] = 'Sum'
+    menu['3'] = 'Plot'
+    menu['4'] = 'Edit categories'
     menu['q'] = 'Quit'
 
     while True:
@@ -266,15 +306,19 @@ def menu(df):
 
         selection=input("Please Select: ")
         if selection =='1':
-            print_menu(df)
+            options_menu(df, print_data, categories)
         elif selection == '2':
-            plot_menu(df)
+            options_menu(df, print_sum, categories)
         elif selection == '3':
+            edit_menu(df)
+        elif selection == '4':
             edit_menu(df)
         elif selection == 'q':
           break
         else:
           print ("Unknown Option Selected!")
+
+
 
 
 def input_args():
@@ -293,6 +337,7 @@ def input_args():
 
 
 
+
 def main():
     accounts_file, category_file = input_args()
     acc = read_accounts_file(accounts_file)
@@ -301,8 +346,8 @@ def main():
     #df = filter_data(df, 'Helse', min=0, max=30000)
     #print(df)
     #print_sum(df)
-    print_data(df)
-    menu(df)
+    #print_data(df)
+    menu(df, categories)
 
 
 
